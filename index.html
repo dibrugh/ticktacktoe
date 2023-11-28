@@ -47,12 +47,6 @@
       const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
       const [winnerSequence, setWinnerSequence] = React.useState();
 
-      const getSymbolClassName = (symbol) => {
-        if (symbol === SYMBOL_O) return 'symbol--o';
-        if (symbol === SYMBOL_X) return 'symbol--x';
-        return '';
-      }
-
       const handleCellClick = (index) => {
         // Если в клетке уже что-то есть, т.е не null, или выявлен победитель просто выходим
         if (cells[index] || winnerSequence) {
@@ -69,31 +63,84 @@
         setWinnerSequence(winner);
       }
 
-      const renderSymbol = (symbol) => <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
+      const handleReset = () => {
+        setCells(Array.from({ length: 9 }, () => null));
+        setCurrentStep(SYMBOL_O);
+        // Обнуляем isWinner, соответственно убираем className победителя
+        setWinnerSequence(null);
+      }
+
       // Определяем символ победителя
       const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
+      // Определяем ничью
+      const isTie = !winnerSequence && cells.filter(value => value === null).length === 0;
 
       return (
         <div className="game">
-          <div className="game-info">
-            { /* Использует оператор нулевого слияния, чтобы проверить winnerSequence на null или undefinied */}
-            {winnerSequence ? 'Победитель: ' : 'Ход: '} {renderSymbol(winnerSymbol ?? currentStep)}
-          </div>
+          <GameInfo
+            isTie={isTie}
+            winnerSymbol={winnerSymbol}
+            currentStep={currentStep}
+          />
+
           <div className="game-field">
-            {cells.map((symbol, index) => {
-              // Если winnerSequence === undefined, не вызываем includes
-              const isWinner = winnerSequence?.includes(index);
-              return <button
-                onClick={(e) => handleCellClick(index)}
-                key={index}
-                className={`cell ${isWinner ? 'cell--win' : ''}`}
-              >
-                {symbol ? renderSymbol(symbol) : null}
-              </button>
-            })}
+            {cells.map((symbol, index) => (
+              <GameCell
+                onClick={() => handleCellClick(index)}
+                symbol={symbol}
+                // Если winnerSequence === undefined, не вызываем includes
+                isWinner={winnerSequence?.includes(index)}
+              />
+            ))}
           </div>
+          <br />
+          <button onClick={handleReset}>Reset</button>
         </div>
       )
+    }
+
+    function GameInfo({ isTie, winnerSymbol, currentStep }) {
+      if (isTie) {
+        return (
+          <div className="game-info">
+            Ничья!
+          </div>
+        )
+      }
+      // Если есть winnerSymbol, значит кто-то победил :)
+      if (winnerSymbol) {
+        return (
+          <div className="game-info">
+            Победитель: <GameSymbol symbol={winnerSymbol ?? currentStep} />
+          </div>
+        )
+      }
+
+      return (
+        <div className="game-info">
+          Ход: <GameSymbol symbol={currentStep} />
+        </div>
+      )
+    }
+
+    function GameCell({ isWinner, onClick, symbol }) {
+      return (
+        <button
+          onClick={onClick}
+          className={`cell ${isWinner ? 'cell--win' : ''}`}
+        >
+          {symbol ? <GameSymbol symbol={symbol} /> : null}
+        </button>
+      )
+    }
+
+    function GameSymbol({ symbol }) {
+      const getSymbolClassName = (symbol) => {
+        if (symbol === SYMBOL_O) return 'symbol--o';
+        if (symbol === SYMBOL_X) return 'symbol--x';
+        return '';
+      }
+      return <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
     }
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
