@@ -41,8 +41,8 @@
         }
       }
     }
-
-    function App() {
+    // Пишем кастомный хук
+    function useGameState() {
       const [cells, setCells] = React.useState([null, null, null, null, null, null, null, null, null]);
       const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
       const [winnerSequence, setWinnerSequence] = React.useState();
@@ -68,12 +68,29 @@
         setCurrentStep(SYMBOL_O);
         // Обнуляем isWinner, соответственно убираем className победителя
         setWinnerSequence(null);
+
       }
 
       // Определяем символ победителя
       const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
       // Определяем ничью
       const isTie = !winnerSequence && cells.filter(value => value === null).length === 0;
+
+      // Чтобы можно было использовать в дальнейшем, нужно вернуть то, что планируем использовать
+      return {
+        cells,
+        currentStep,
+        winnerSequence,
+        handleCellClick,
+        handleReset,
+        winnerSymbol,
+        isTie
+      }
+    }
+
+    function App() {
+      // Получаем все из кастомного хука
+      const { cells, currentStep, winnerSequence, handleCellClick, handleReset, winnerSymbol, isTie } = useGameState();
 
       return (
         <div className="game">
